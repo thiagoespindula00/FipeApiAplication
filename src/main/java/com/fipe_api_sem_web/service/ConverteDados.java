@@ -3,9 +3,11 @@ package com.fipe_api_sem_web.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fipe_api_sem_web.model.Marca;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ConverteDados {
@@ -19,9 +21,12 @@ public class ConverteDados {
         }
     }
 
-    public static <T> List<T> converteJsonParaClasse(String json, TypeReference<List<T>> typeReference) {
+    public static <T> List<T> obterLista(String json, Class<T> classe) {
+        CollectionType lista = mapper.getTypeFactory()
+                .constructCollectionType(List.class, classe);
+
         try {
-            return mapper.readValue(json, typeReference);
+            return mapper.readValue(json, lista);
         } catch (JsonProcessingException e) {
             throw new RuntimeException();
         }

@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SpringBootApplication
 public class FipeApiApplication implements CommandLineRunner {
@@ -39,18 +40,18 @@ public class FipeApiApplication implements CommandLineRunner {
 			String tipoVeiculo = scanner.nextLine();
 
 			String json = ConsumoAPI.getDados("https://parallelum.com.br/fipe/api/v1/" + tipoVeiculo + "/marcas");
-			List<Marca> marcas = new ArrayList<>();
-			marcas = ConverteDados.converteJsonParaClasse(json, new TypeReference<List<Marca>>() {});
+			List<Marca> marcas = ConverteDados.obterLista(json, Marca.class);
 
 			System.out.println("Marcas");
-			for (Marca marca : marcas) {
-				System.out.println("Cód: " + marca.codigo() + " Descrição: " + marca.nome());
-			}
+			marcas.stream()
+					.sorted(Comparator.comparing(Marca::codigo))
+					.forEach(marca -> {
+						System.out.println("Cód: " + marca.codigo() + " Descrição: " + marca.nome());
+					});
 			System.out.println("Informe o código da marca para consulta:");
 			String marca = scanner.nextLine();
 
 			json = ConsumoAPI.getDados("https://parallelum.com.br/fipe/api/v1/" + tipoVeiculo + "/marcas/" + marca + "/modelos");
-			//System.out.println(json);
 			ModelosResponse modelosResponse = ConverteDados.converteJsonParaClasse(json, ModelosResponse.class);
 			System.out.println("Modelos");
 			modelosResponse.modelos().forEach((modelo -> {
@@ -59,8 +60,12 @@ public class FipeApiApplication implements CommandLineRunner {
 			System.out.println("Digite um trecho do nome do veículo para consulta:");
 			String trechoNomeVeiculo = scanner.nextLine();
 
-			modelosResponse.modelos().stream()
+			List<Modelo> modelosFiltrados = modelosResponse.modelos().stream()
 					.filter(modelo -> modelo.nome().toLowerCase().contains(trechoNomeVeiculo.toLowerCase()))
+					.toList();
+
+			modelosFiltrados.stream()
+					.sorted(Comparator.comparing(Modelo::codigo))
 					.forEach(modelo -> {
 						System.out.println("Cód: " + modelo.codigo() + " Descrição: " + modelo.nome());
 					});
@@ -68,7 +73,7 @@ public class FipeApiApplication implements CommandLineRunner {
 			System.out.println("Digite o código do modelo para consultar valores:");
 			String modelo = scanner.nextLine();
 			json = ConsumoAPI.getDados("https://parallelum.com.br/fipe/api/v1/" + tipoVeiculo + "/marcas/" + marca + "/modelos/" + modelo + "/anos");
-			List<Ano> anos = ConverteDados.converteJsonParaClasse(json, new TypeReference<List<Ano>>() {});
+			List<Ano> anos = ConverteDados.obterLista(json, Ano.class);
 
 
 			List<Veiculo> veiculos = new ArrayList<>();
